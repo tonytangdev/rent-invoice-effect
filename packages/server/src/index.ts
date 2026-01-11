@@ -1,15 +1,22 @@
-import { HttpRouter, HttpServer, HttpServerResponse } from "@effect/platform"
+import { HttpServer } from "@effect/platform"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
-import { Layer } from "effect"
+import { Effect, Layer } from "effect"
+import { router } from "./routes"
+import { serverPort } from "./config"
+import { DatabaseLive } from "./db"
 
-const router = HttpRouter.empty.pipe(
-  HttpRouter.get("/", HttpServerResponse.json({ message: "Hello World" }))
+const ServerLive = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const port = yield* serverPort
+    return BunHttpServer.layer({ port })
+  })
 )
 
-const app = router.pipe(HttpServer.serve(), HttpServer.withLogAddress)
+const app = router.pipe(
+  HttpServer.serve(),
+  HttpServer.withLogAddress
+)
 
-const port = 3000
+const AppLive = Layer.mergeAll(ServerLive, DatabaseLive)
 
-const ServerLive = BunHttpServer.layer({ port })
-
-BunRuntime.runMain(Layer.launch(Layer.provide(app, ServerLive)))
+BunRuntime.runMain(Layer.launch(Layer.provide(app, AppLive)))

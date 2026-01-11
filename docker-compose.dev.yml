@@ -7,7 +7,5 @@ services:
       NODE_ENV: development
     command: bun --watch run packages/server/src/index.ts
     volumes:
-      - ./packages:/app/packages
+      - ./packages/server/src:/app/packages/server/src
       - ./tsconfig.json:/app/tsconfig.json
-      - /app/node_modules
-      - /app/packages/server/node_modules
