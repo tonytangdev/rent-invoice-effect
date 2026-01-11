@@ -1,0 +1,13 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+    command: bun --watch run packages/server/src/index.ts
+    volumes:
+      - ./packages:/app/packages
+      - ./tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/packages/server/node_modules

@@ -1,0 +1,12 @@
+FROM oven/bun:1-alpine
+WORKDIR /app
+
+COPY package.json bun.lock* ./
+COPY packages/server/package.json ./packages/server/
+RUN bun install
+
+COPY tsconfig.json ./
+
+EXPOSE 3000
+
+CMD ["bun", "--watch", "run", "packages/server/src/index.ts"]
