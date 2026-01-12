@@ -3,10 +3,12 @@ WORKDIR /app
 
 COPY package.json bun.lock ./
 COPY packages/server/package.json ./packages/server/
+COPY packages/api/package.json ./packages/api/
 RUN bun install --frozen-lockfile
 
 COPY tsconfig.json ./
 COPY packages/server ./packages/server
+COPY packages/api ./packages/api
 
 EXPOSE 3000
 

@@ -5,11 +5,20 @@
     "": {
       "name": "rent-invoice-effect",
     },
+    "packages/api": {
+      "name": "api",
+      "version": "0.1.0",
+      "dependencies": {
+        "@effect/platform": "^0.94.1",
+        "effect": "^3.19.14",
+      },
+    },
     "packages/server": {
       "name": "server",
       "dependencies": {
         "@effect/platform": "^0.94.1",
         "@effect/platform-bun": "^0.87.0",
+        "api": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "effect": "^3.19.14",
         "postgres": "^3.4.8",
@@ -141,6 +150,8 @@
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
     "@types/node": ["@types/node@25.0.6", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-NNu0sjyNxpoiW3YuVFfNz7mxSQ+S4X2G28uqg2s+CzoqoQjLPsWSbsFFyztIAqt2vb8kfEAsJNepMGPTxFDx3Q=="],
+
+    "api": ["api@workspace:packages/api"],
 
     "buffer-from": ["buffer-from@1.1.2", "", {}, "sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ=="],
 

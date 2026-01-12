@@ -14,6 +14,12 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    // Monorepo paths
+    "paths": {
+      "api": ["./packages/api/src/index.ts"],
+      "api/*": ["./packages/api/src/*"]
+    },
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,
