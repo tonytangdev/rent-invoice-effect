@@ -4,7 +4,9 @@
     "dev": "bun run src/index.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
   },
   "dependencies": {
     "@effect/platform": "^0.94.1",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@effect/language-service": "^0.64.1",
+    "@types/bun": "latest",
     "@types/node": "^25.0.6",
     "drizzle-kit": "^0.31.8"
   }
