@@ -6,7 +6,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"test": "bun test",
-		"test:coverage": "bun test --coverage"
+		"test:coverage": "bun test --coverage",
+		"test:e2e": "bun test --filter e2e"
 	},
 	"dependencies": {
 		"@effect/platform": "^0.94.1",
