@@ -31,7 +31,7 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
 						updatedAt: invoice.updatedAt,
 						deletedAt: invoice.deletedAt,
 					};
-				}),
+				}).pipe(Effect.withSpan("invoices.create")),
 			)
 			.handle("getById", ({ path }) =>
 				Effect.gen(function* () {
@@ -49,7 +49,7 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
 						updatedAt: invoice.updatedAt,
 						deletedAt: invoice.deletedAt,
 					};
-				}),
+				}).pipe(Effect.withSpan("invoices.getById")),
 			)
 			.handle("list", ({ urlParams }) =>
 				Effect.gen(function* () {
@@ -73,7 +73,7 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
 						})),
 						total: result.total,
 					};
-				}),
+				}).pipe(Effect.withSpan("invoices.list")),
 			)
 			.handle("update", ({ path, payload }) =>
 				Effect.gen(function* () {
@@ -94,6 +94,6 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
 						updatedAt: invoice.updatedAt,
 						deletedAt: invoice.deletedAt,
 					};
-				}),
+				}).pipe(Effect.withSpan("invoices.update")),
 			),
 );

@@ -16,6 +16,15 @@ services:
       timeout: 5s
       retries: 5
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    restart: unless-stopped
+    ports:
+      - "4318:4318"  # OTLP HTTP receiver
+      - "16686:16686" # Jaeger UI
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
   server:
     build:
       context: .

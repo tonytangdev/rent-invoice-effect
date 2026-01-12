@@ -23,24 +23,26 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 
 		const save = (invoice: Invoice) =>
 			Effect.gen(function* () {
-				const result = yield* Effect.tryPromise({
-					try: () =>
-						db
-							.insert(invoicesTable)
-							.values({
-								id: invoice.id,
-								amountCents: invoice.amountCents,
-								date: invoice.date,
-								createdAt: invoice.createdAt,
-								updatedAt: invoice.updatedAt,
-								deletedAt: invoice.deletedAt,
-							})
-							.returning(),
-					catch: (e) => new TransientDatabaseError({ message: String(e) }),
-				}).pipe(
-					Effect.retry(retryPolicy),
-					Effect.mapError(
-						(e) => new InvalidInvoiceError({ message: e.message }),
+				const result = yield* Effect.withSpan("db.insert.invoices")(
+					Effect.tryPromise({
+						try: () =>
+							db
+								.insert(invoicesTable)
+								.values({
+									id: invoice.id,
+									amountCents: invoice.amountCents,
+									date: invoice.date,
+									createdAt: invoice.createdAt,
+									updatedAt: invoice.updatedAt,
+									deletedAt: invoice.deletedAt,
+								})
+								.returning(),
+						catch: (e) => new TransientDatabaseError({ message: String(e) }),
+					}).pipe(
+						Effect.retry(retryPolicy),
+						Effect.mapError(
+							(e) => new InvalidInvoiceError({ message: e.message }),
+						),
 					),
 				);
 
@@ -66,13 +68,15 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 
 		const findById = (id: string) =>
 			Effect.gen(function* () {
-				const result = yield* Effect.tryPromise({
-					try: () =>
-						db.query.invoicesTable.findFirst({
-							where: eq(invoicesTable.id, id),
-						}),
-					catch: () => new InvoiceNotFoundError({ id }),
-				});
+				const result = yield* Effect.withSpan("db.query.invoices.findById")(
+					Effect.tryPromise({
+						try: () =>
+							db.query.invoicesTable.findFirst({
+								where: eq(invoicesTable.id, id),
+							}),
+						catch: () => new InvoiceNotFoundError({ id }),
+					}),
+				);
 
 				if (!result) {
 					return yield* Effect.fail(new InvoiceNotFoundError({ id }));
@@ -90,18 +94,22 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 
 		const findAll = (params: { limit: number; offset: number }) =>
 			Effect.gen(function* () {
-				const [invoices, countResult] = yield* Effect.all([
-					Effect.promise(() =>
-						db
-							.select()
-							.from(invoicesTable)
-							.limit(params.limit)
-							.offset(params.offset),
-					),
-					Effect.promise(() =>
-						db.select({ value: count() }).from(invoicesTable),
-					),
-				]);
+				const [invoices, countResult] = yield* Effect.withSpan(
+					"db.query.invoices.findAll",
+				)(
+					Effect.all([
+						Effect.promise(() =>
+							db
+								.select()
+								.from(invoicesTable)
+								.limit(params.limit)
+								.offset(params.offset),
+						),
+						Effect.promise(() =>
+							db.select({ value: count() }).from(invoicesTable),
+						),
+					]),
+				);
 
 				const total = countResult[0]?.value ?? 0;
 
@@ -123,20 +131,22 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 
 		const update = (invoice: Invoice) =>
 			Effect.gen(function* () {
-				const result = yield* Effect.tryPromise({
-					try: () =>
-						db
-							.update(invoicesTable)
-							.set({
-								amountCents: invoice.amountCents,
-								date: invoice.date,
-								updatedAt: invoice.updatedAt,
-								deletedAt: invoice.deletedAt,
-							})
-							.where(eq(invoicesTable.id, invoice.id))
-							.returning(),
-					catch: (e) => new InvalidInvoiceError({ message: String(e) }),
-				});
+				const result = yield* Effect.withSpan("db.update.invoices")(
+					Effect.tryPromise({
+						try: () =>
+							db
+								.update(invoicesTable)
+								.set({
+									amountCents: invoice.amountCents,
+									date: invoice.date,
+									updatedAt: invoice.updatedAt,
+									deletedAt: invoice.deletedAt,
+								})
+								.where(eq(invoicesTable.id, invoice.id))
+								.returning(),
+						catch: (e) => new InvalidInvoiceError({ message: String(e) }),
+					}),
+				);
 
 				const updated = result[0];
 
