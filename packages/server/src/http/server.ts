@@ -1,5 +1,5 @@
-import { HttpServer, HttpApiBuilder } from "@effect/platform"
-import { BunHttpServer } from "@effect/platform-bun"
+import { HttpServer, HttpApiBuilder, HttpApiScalar } from "@effect/platform"
+import { BunHttpServer, BunContext } from "@effect/platform-bun"
 import { Effect, Layer } from "effect"
 import { serverPort } from "../config"
 import { ApiLive } from "./api"
@@ -9,9 +9,16 @@ const ServerLive = Layer.unwrapEffect(
   Effect.map(serverPort, (port) => BunHttpServer.layer({ port }))
 )
 
-// HTTP server with routes
+// OpenAPI and Scalar docs layers
+const OpenApiLive = HttpApiBuilder.middlewareOpenApi({ path: "/openapi.json" })
+const ScalarLive = HttpApiScalar.layer({ path: "/docs" })
+
+// HTTP server with routes and Scalar docs
 export const HttpLive = HttpApiBuilder.serve().pipe(
   Layer.provide(ApiLive),
+  Layer.provideMerge(OpenApiLive.pipe(Layer.provide(ApiLive))),
+  Layer.provideMerge(ScalarLive.pipe(Layer.provide(ApiLive))),
+  Layer.provide(BunContext.layer),
   Layer.provideMerge(ServerLive),
   HttpServer.withLogAddress
 )
