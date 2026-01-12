@@ -1,2 +1,2 @@
 // Invoice module - composed layers
-export * from "./module"
+export * from "./module";

@@ -1,14 +1,14 @@
 {
-  "name": "api",
-  "version": "0.1.0",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./groups": "./src/groups/index.ts"
-  },
-  "dependencies": {
-    "@effect/platform": "^0.94.1",
-    "effect": "^3.19.14"
-  }
+	"name": "api",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./schemas": "./src/schemas/index.ts",
+		"./groups": "./src/groups/index.ts"
+	},
+	"dependencies": {
+		"@effect/platform": "^0.94.1",
+		"effect": "^3.19.14"
+	}
 }

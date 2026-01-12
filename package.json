@@ -1,13 +1,24 @@
 {
-  "name": "rent-invoice-effect",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "scripts": {
-    "test": "bun test",
-    "test:coverage": "bun test --coverage"
-  }
+	"name": "rent-invoice-effect",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"test": "bun test",
+		"test:coverage": "bun test --coverage",
+		"format": "biome format --write .",
+		"lint": "biome check --write .",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*": "biome check --write --no-errors-on-unmatched"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.11",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7"
+	}
 }
