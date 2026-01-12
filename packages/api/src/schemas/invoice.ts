@@ -58,3 +58,8 @@ export class InvalidInvoiceError extends Schema.TaggedError<InvalidInvoiceError>
 	"InvalidInvoiceError",
 	{ message: Schema.String },
 ) {}
+
+export class TransientDatabaseError extends Schema.TaggedError<TransientDatabaseError>()(
+	"TransientDatabaseError",
+	{ message: Schema.String },
+) {}

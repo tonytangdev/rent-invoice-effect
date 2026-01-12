@@ -1,10 +1,19 @@
-import { InvalidInvoiceError, InvoiceNotFoundError } from "api/schemas/invoice";
+import {
+	InvalidInvoiceError,
+	InvoiceNotFoundError,
+	TransientDatabaseError,
+} from "api/schemas/invoice";
 import { count, eq } from "drizzle-orm";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Schedule } from "effect";
 import { Database } from "../../../shared/db";
 import { InvoiceRepository } from "../../application/ports/repository.port";
 import { Invoice } from "../../domain/entity";
 import { invoicesTable } from "./schema";
+
+// Retry policy: exponential backoff, 3 attempts
+const retryPolicy = Schedule.exponential("100 millis").pipe(
+	Schedule.compose(Schedule.recurs(3)),
+);
 
 // Adapter - implements the port using Drizzle
 export const DrizzleInvoiceRepositoryLive = Layer.effect(
@@ -27,8 +36,13 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 								deletedAt: invoice.deletedAt,
 							})
 							.returning(),
-					catch: (e) => new InvalidInvoiceError({ message: String(e) }),
-				});
+					catch: (e) => new TransientDatabaseError({ message: String(e) }),
+				}).pipe(
+					Effect.retry(retryPolicy),
+					Effect.mapError(
+						(e) => new InvalidInvoiceError({ message: e.message }),
+					),
+				);
 
 				const saved = result[0];
 
