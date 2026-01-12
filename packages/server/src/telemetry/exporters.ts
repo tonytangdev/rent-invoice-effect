@@ -34,7 +34,6 @@ export const createSpanExporter = Effect.gen(function* () {
 				headers,
 			}) as SpanExporter;
 
-		case "console":
 		default:
 			return new ConsoleSpanExporter() as SpanExporter;
 	}

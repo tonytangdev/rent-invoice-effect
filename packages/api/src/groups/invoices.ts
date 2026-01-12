@@ -28,4 +28,9 @@ export class InvoicesApi extends HttpApiGroup.make("invoices")
 			.addError(InvoiceSchema.InvoiceNotFoundError, { status: 404 })
 			.addError(InvoiceSchema.InvalidInvoiceError, { status: 400 }),
 	)
+	.add(
+		HttpApiEndpoint.del("delete")`/${idParam}`
+			.addSuccess(InvoiceSchema.Invoice)
+			.addError(InvoiceSchema.InvoiceNotFoundError, { status: 404 }),
+	)
 	.prefix("/invoices") {}

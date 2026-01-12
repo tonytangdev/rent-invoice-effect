@@ -3,7 +3,7 @@ import {
 	InvoiceNotFoundError,
 	TransientDatabaseError,
 } from "api/schemas/invoice";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 import { Effect, Layer, Schedule } from "effect";
 import { Database } from "../../../shared/db";
 import { InvoiceRepository } from "../../application/ports/repository.port";
@@ -72,7 +72,10 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 					Effect.tryPromise({
 						try: () =>
 							db.query.invoicesTable.findFirst({
-								where: eq(invoicesTable.id, id),
+								where: and(
+									eq(invoicesTable.id, id),
+									isNull(invoicesTable.deletedAt),
+								),
 							}),
 						catch: () => new InvoiceNotFoundError({ id }),
 					}),
@@ -102,11 +105,15 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 							db
 								.select()
 								.from(invoicesTable)
+								.where(isNull(invoicesTable.deletedAt))
 								.limit(params.limit)
 								.offset(params.offset),
 						),
 						Effect.promise(() =>
-							db.select({ value: count() }).from(invoicesTable),
+							db
+								.select({ value: count() })
+								.from(invoicesTable)
+								.where(isNull(invoicesTable.deletedAt)),
 						),
 					]),
 				);
@@ -166,6 +173,41 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
 				});
 			});
 
-		return { save, findById, findAll, update };
+		const deleteInvoice = (invoice: Invoice) =>
+			Effect.gen(function* () {
+				const result = yield* Effect.withSpan("db.delete.invoices")(
+					Effect.tryPromise({
+						try: () =>
+							db
+								.update(invoicesTable)
+								.set({
+									deletedAt: invoice.deletedAt,
+									updatedAt: invoice.updatedAt,
+								})
+								.where(eq(invoicesTable.id, invoice.id))
+								.returning(),
+						catch: () => new InvoiceNotFoundError({ id: invoice.id }),
+					}),
+				);
+
+				const deleted = result[0];
+
+				if (!deleted) {
+					return yield* Effect.fail(
+						new InvoiceNotFoundError({ id: invoice.id }),
+					);
+				}
+
+				return new Invoice({
+					id: deleted.id,
+					amountCents: deleted.amountCents,
+					date: deleted.date,
+					createdAt: deleted.createdAt,
+					updatedAt: deleted.updatedAt,
+					deletedAt: deleted.deletedAt,
+				});
+			});
+
+		return { save, findById, findAll, update, delete: deleteInvoice };
 	}),
 );

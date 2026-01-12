@@ -2,6 +2,7 @@ import { HttpApiBuilder } from "@effect/platform";
 import { RentInvoiceApi } from "api";
 import { Effect } from "effect";
 import { CreateInvoiceUseCase } from "../../application/use-cases/create-invoice.use-case";
+import { DeleteInvoiceUseCase } from "../../application/use-cases/delete-invoice.use-case";
 import { GetByIdUseCase } from "../../application/use-cases/get-by-id.use-case";
 import { ListInvoicesUseCase } from "../../application/use-cases/list-invoices.use-case";
 import { UpdateInvoiceUseCase } from "../../application/use-cases/update-invoice.use-case";
@@ -95,5 +96,23 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
 						deletedAt: invoice.deletedAt,
 					};
 				}).pipe(Effect.withSpan("invoices.update")),
+			)
+			.handle("delete", ({ path }) =>
+				Effect.gen(function* () {
+					const useCase = yield* DeleteInvoiceUseCase;
+
+					// Execute use case
+					const invoice = yield* useCase.execute(path.id);
+
+					// Map domain entity to API response schema
+					return {
+						id: invoice.id,
+						amountCents: invoice.amountCents,
+						date: invoice.date,
+						createdAt: invoice.createdAt,
+						updatedAt: invoice.updatedAt,
+						deletedAt: invoice.deletedAt,
+					};
+				}).pipe(Effect.withSpan("invoices.delete")),
 			),
 );

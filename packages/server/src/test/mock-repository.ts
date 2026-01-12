@@ -16,7 +16,7 @@ export class MockInvoiceRepository implements InvoiceRepositoryService {
 
 	findById(id: string): Effect.Effect<Invoice, InvoiceNotFoundError> {
 		const invoice = this.invoices.get(id);
-		if (!invoice) {
+		if (!invoice || invoice.deletedAt !== null) {
 			return Effect.fail(new InvoiceNotFoundError({ id }));
 		}
 		return Effect.succeed(invoice);
@@ -26,7 +26,9 @@ export class MockInvoiceRepository implements InvoiceRepositoryService {
 		limit: number;
 		offset: number;
 	}): Effect.Effect<{ invoices: Invoice[]; total: number }> {
-		const allInvoices = Array.from(this.invoices.values());
+		const allInvoices = Array.from(this.invoices.values()).filter(
+			(invoice) => invoice.deletedAt === null,
+		);
 		const total = allInvoices.length;
 		const paginated = allInvoices.slice(
 			params.offset,
@@ -42,6 +44,14 @@ export class MockInvoiceRepository implements InvoiceRepositoryService {
 	update(
 		invoice: Invoice,
 	): Effect.Effect<Invoice, InvoiceNotFoundError | InvalidInvoiceError> {
+		if (!this.invoices.has(invoice.id)) {
+			return Effect.fail(new InvoiceNotFoundError({ id: invoice.id }));
+		}
+		this.invoices.set(invoice.id, invoice);
+		return Effect.succeed(invoice);
+	}
+
+	delete(invoice: Invoice): Effect.Effect<Invoice, InvoiceNotFoundError> {
 		if (!this.invoices.has(invoice.id)) {
 			return Effect.fail(new InvoiceNotFoundError({ id: invoice.id }));
 		}

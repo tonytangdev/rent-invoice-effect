@@ -23,6 +23,7 @@ describe("GetByIdUseCase", () => {
 			findAll: () => Effect.succeed({ invoices: [], total: 0 }),
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = GetByIdUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -45,6 +46,7 @@ describe("GetByIdUseCase", () => {
 			findAll: () => Effect.succeed({ invoices: [], total: 0 }),
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = GetByIdUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -71,6 +73,7 @@ describe("GetByIdUseCase", () => {
 			findAll: () => Effect.succeed({ invoices: [], total: 0 }),
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = GetByIdUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -89,5 +92,31 @@ describe("GetByIdUseCase", () => {
 		expect(result1.amountCents).toBe(5000);
 		expect(result2.id).toBe(invoice2.id);
 		expect(result2.amountCents).toBe(7500);
+	});
+
+	test("fails when invoice is deleted", async () => {
+		const deletedInvoice = Invoice.create({
+			amountCents: 5000,
+			date: new Date("2024-01-01"),
+		}).softDelete();
+
+		const mockRepo = Layer.succeed(InvoiceRepository, {
+			save: () => Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			findById: () =>
+				Effect.fail(new InvoiceNotFoundError({ id: deletedInvoice.id })),
+			findAll: () => Effect.succeed({ invoices: [], total: 0 }),
+			update: () =>
+				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
+		});
+
+		const testLayer = GetByIdUseCaseLive.pipe(Layer.provide(mockRepo));
+
+		const result = await Effect.gen(function* () {
+			const useCase = yield* GetByIdUseCase;
+			return yield* useCase.execute(deletedInvoice.id);
+		}).pipe(Effect.provide(testLayer), Effect.runPromiseExit);
+
+		expect(Exit.isFailure(result)).toBe(true);
 	});
 });

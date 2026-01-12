@@ -17,6 +17,7 @@ export interface InvoiceRepositoryService {
 	update: (
 		invoice: Invoice,
 	) => Effect.Effect<Invoice, InvoiceNotFoundError | InvalidInvoiceError>;
+	delete: (invoice: Invoice) => Effect.Effect<Invoice, InvoiceNotFoundError>;
 }
 
 export class InvoiceRepository extends Context.Tag("InvoiceRepository")<

@@ -250,4 +250,105 @@ describe("Invoice API e2e", () => {
 			expect(response.status).toBe(400);
 		});
 	});
+
+	describe("DELETE /api/v1/invoices/:id", () => {
+		test("deletes invoice successfully", async () => {
+			// Create invoice
+			const createResponse = await fetch(`${baseUrl}/api/v1/invoices`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					amountCents: 10000,
+					date: "2024-01-01T00:00:00.000Z",
+				}),
+			});
+
+			const created = (await createResponse.json()) as InvoiceResponse;
+
+			// Delete invoice
+			const response = await fetch(`${baseUrl}/api/v1/invoices/${created.id}`, {
+				method: "DELETE",
+			});
+
+			expect(response.status).toBe(200);
+
+			const body = (await response.json()) as InvoiceResponse;
+			expect(body.id).toBe(created.id);
+			expect(body.deletedAt).not.toBeNull();
+		});
+
+		test("returns 404 for non-existent id", async () => {
+			const nonExistentId = "550e8400-e29b-41d4-a716-446655440000";
+			const response = await fetch(
+				`${baseUrl}/api/v1/invoices/${nonExistentId}`,
+				{
+					method: "DELETE",
+				},
+			);
+
+			expect(response.status).toBe(404);
+		});
+
+		test("deleted invoice not returned by getById", async () => {
+			// Create invoice
+			const createResponse = await fetch(`${baseUrl}/api/v1/invoices`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					amountCents: 10000,
+					date: "2024-01-01T00:00:00.000Z",
+				}),
+			});
+
+			const created = (await createResponse.json()) as InvoiceResponse;
+
+			// Delete invoice
+			await fetch(`${baseUrl}/api/v1/invoices/${created.id}`, {
+				method: "DELETE",
+			});
+
+			// Try to get deleted invoice
+			const response = await fetch(`${baseUrl}/api/v1/invoices/${created.id}`);
+
+			expect(response.status).toBe(404);
+		});
+
+		test("deleted invoice not returned in list", async () => {
+			// Create invoices
+			const create1Response = await fetch(`${baseUrl}/api/v1/invoices`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					amountCents: 10000,
+					date: "2024-01-01T00:00:00.000Z",
+				}),
+			});
+
+			const create2Response = await fetch(`${baseUrl}/api/v1/invoices`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					amountCents: 20000,
+					date: "2024-01-02T00:00:00.000Z",
+				}),
+			});
+
+			const invoice1 = (await create1Response.json()) as InvoiceResponse;
+			const invoice2 = (await create2Response.json()) as InvoiceResponse;
+
+			// Delete first invoice
+			await fetch(`${baseUrl}/api/v1/invoices/${invoice1.id}`, {
+				method: "DELETE",
+			});
+
+			// List invoices
+			const listResponse = await fetch(`${baseUrl}/api/v1/invoices`);
+			const body = (await listResponse.json()) as InvoiceListResponse;
+
+			expect(body.total).toBe(1);
+			expect(body.invoices).toHaveLength(1);
+			expect(body.invoices[0]?.id).toBe(invoice2.id);
+			expect(body.invoices.find((i) => i.id === invoice1.id)).toBeUndefined();
+		});
+	});
 });

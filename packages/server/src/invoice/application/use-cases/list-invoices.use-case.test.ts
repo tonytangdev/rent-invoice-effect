@@ -16,6 +16,7 @@ describe("ListInvoicesUseCase", () => {
 			findAll: () => Effect.succeed({ invoices: [], total: 0 }),
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = ListInvoicesUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -47,6 +48,7 @@ describe("ListInvoicesUseCase", () => {
 			},
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = ListInvoicesUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -80,6 +82,7 @@ describe("ListInvoicesUseCase", () => {
 			},
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = ListInvoicesUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -112,6 +115,7 @@ describe("ListInvoicesUseCase", () => {
 			},
 			update: () =>
 				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
 		});
 
 		const testLayer = ListInvoicesUseCaseLive.pipe(Layer.provide(mockRepo));
@@ -123,5 +127,39 @@ describe("ListInvoicesUseCase", () => {
 
 		expect(result.invoices).toHaveLength(5);
 		expect(result.total).toBe(10);
+	});
+
+	test("excludes deleted invoices", async () => {
+		const invoice1 = Invoice.create({ amountCents: 5000, date: new Date() });
+		const invoice2 = Invoice.create({ amountCents: 7500, date: new Date() });
+		const deletedInvoice = Invoice.create({
+			amountCents: 10000,
+			date: new Date(),
+		}).softDelete();
+
+		const mockRepo = Layer.succeed(InvoiceRepository, {
+			save: () => Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			findById: (id: string) => Effect.fail(new InvoiceNotFoundError({ id })),
+			findAll: () => {
+				// Mock repo only returns non-deleted invoices
+				return Effect.succeed({ invoices: [invoice1, invoice2], total: 2 });
+			},
+			update: () =>
+				Effect.fail(new InvalidInvoiceError({ message: "Invalid" })),
+			delete: () => Effect.fail(new InvoiceNotFoundError({ id: "" })),
+		});
+
+		const testLayer = ListInvoicesUseCaseLive.pipe(Layer.provide(mockRepo));
+
+		const result = await Effect.gen(function* () {
+			const useCase = yield* ListInvoicesUseCase;
+			return yield* useCase.execute({ limit: 10, offset: 0 });
+		}).pipe(Effect.provide(testLayer), Effect.runPromise);
+
+		expect(result.invoices).toHaveLength(2);
+		expect(result.total).toBe(2);
+		expect(
+			result.invoices.find((i) => i.id === deletedInvoice.id),
+		).toBeUndefined();
 	});
 });

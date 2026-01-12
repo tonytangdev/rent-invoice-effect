@@ -1,6 +1,7 @@
 import { Layer } from "effect";
 import { InvoiceRepository } from "../invoice/application/ports/repository.port";
 import { CreateInvoiceUseCaseLive } from "../invoice/application/use-cases/create-invoice.use-case";
+import { DeleteInvoiceUseCaseLive } from "../invoice/application/use-cases/delete-invoice.use-case";
 import { GetByIdUseCaseLive } from "../invoice/application/use-cases/get-by-id.use-case";
 import { ListInvoicesUseCaseLive } from "../invoice/application/use-cases/list-invoices.use-case";
 import { UpdateInvoiceUseCaseLive } from "../invoice/application/use-cases/update-invoice.use-case";
@@ -19,6 +20,7 @@ const TestUseCaseLive = Layer.mergeAll(
 	ListInvoicesUseCaseLive,
 	GetByIdUseCaseLive,
 	UpdateInvoiceUseCaseLive,
+	DeleteInvoiceUseCaseLive,
 ).pipe(Layer.provide(TestRepositoryLive));
 
 // Test module - handlers with mock dependencies
