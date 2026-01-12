@@ -34,4 +34,16 @@ export class Invoice extends Schema.Class<Invoice>("Invoice")({
       updatedAt: new Date()
     })
   }
+
+  update(props: {
+    amountCents?: number
+    date?: Date
+  }): Invoice {
+    return new Invoice({
+      ...this,
+      amountCents: props.amountCents ?? this.amountCents,
+      date: props.date ?? this.date,
+      updatedAt: new Date()
+    })
+  }
 }

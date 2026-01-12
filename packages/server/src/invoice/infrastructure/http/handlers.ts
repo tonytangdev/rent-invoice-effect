@@ -4,6 +4,7 @@ import { RentInvoiceApi } from "api"
 import { CreateInvoiceUseCase } from "../../application/use-cases/create-invoice.use-case"
 import { ListInvoicesUseCase } from "../../application/use-cases/list-invoices.use-case"
 import { GetByIdUseCase } from "../../application/use-cases/get-by-id.use-case"
+import { UpdateInvoiceUseCase } from "../../application/use-cases/update-invoice.use-case"
 
 // HTTP Adapter - translates HTTP requests to use case calls
 export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
@@ -74,5 +75,25 @@ export const InvoiceHttpHandlersLive = HttpApiBuilder.group(
           }
         })
       )
-      .handle("update", () => Effect.dieMessage("Not implemented"))
+      .handle("update", ({ path, payload }) =>
+        Effect.gen(function* () {
+          const useCase = yield* UpdateInvoiceUseCase
+
+          // Execute use case
+          const invoice = yield* useCase.execute(path.id, {
+            amountCents: payload.amountCents,
+            date: payload.date
+          })
+
+          // Map domain entity to API response schema
+          return {
+            id: invoice.id,
+            amountCents: invoice.amountCents,
+            date: invoice.date,
+            createdAt: invoice.createdAt,
+            updatedAt: invoice.updatedAt,
+            deletedAt: invoice.deletedAt
+          }
+        })
+      )
 )

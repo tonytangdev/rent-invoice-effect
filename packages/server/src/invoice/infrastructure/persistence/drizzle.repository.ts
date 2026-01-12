@@ -105,6 +105,39 @@ export const DrizzleInvoiceRepositoryLive = Layer.effect(
         }
       })
 
-    return { save, findById, findAll }
+    const update = (invoice: Invoice) =>
+      Effect.gen(function* () {
+        const result = yield* Effect.tryPromise({
+          try: () =>
+            db
+              .update(invoicesTable)
+              .set({
+                amountCents: invoice.amountCents,
+                date: invoice.date,
+                updatedAt: invoice.updatedAt,
+                deletedAt: invoice.deletedAt
+              })
+              .where(eq(invoicesTable.id, invoice.id))
+              .returning(),
+          catch: (e) => new InvalidInvoiceError({ message: String(e) })
+        })
+
+        const updated = result[0]
+
+        if (!updated) {
+          return yield* Effect.fail(new InvoiceNotFoundError({ id: invoice.id }))
+        }
+
+        return new Invoice({
+          id: updated.id,
+          amountCents: updated.amountCents,
+          date: updated.date,
+          createdAt: updated.createdAt,
+          updatedAt: updated.updatedAt,
+          deletedAt: updated.deletedAt
+        })
+      })
+
+    return { save, findById, findAll, update }
   })
 )

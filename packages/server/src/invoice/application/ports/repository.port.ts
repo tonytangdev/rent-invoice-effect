@@ -8,6 +8,7 @@ export interface InvoiceRepositoryService {
   save: (invoice: Invoice) => Effect.Effect<Invoice, InvalidInvoiceError>
   findById: (id: string) => Effect.Effect<Invoice, InvoiceNotFoundError>
   findAll: (params: { limit: number; offset: number }) => Effect.Effect<{ invoices: Invoice[]; total: number }>
+  update: (invoice: Invoice) => Effect.Effect<Invoice, InvoiceNotFoundError | InvalidInvoiceError>
 }
 
 export class InvoiceRepository extends Context.Tag("InvoiceRepository")<
